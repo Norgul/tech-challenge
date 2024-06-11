@@ -32,18 +32,41 @@
             <div class="w-2/3">
                 <div>
                     <button class="btn"
-                            :class="{'btn-primary': currentTab == 'bookings', 'btn-default': currentTab != 'bookings'}"
+                            :class="{'btn-primary': currentTab === 'bookings', 'btn-default': currentTab !== 'bookings'}"
                             @click="switchTab('bookings')">Bookings
                     </button>
                     <button class="btn"
-                            :class="{'btn-primary': currentTab == 'journals', 'btn-default': currentTab != 'journals'}"
+                            :class="{'btn-primary': currentTab === 'journals', 'btn-default': currentTab !== 'journals'}"
                             @click="switchTab('journals')">Journals
                     </button>
                 </div>
 
                 <!-- Bookings -->
-                <div class="bg-white rounded p-4" v-if="currentTab == 'bookings'">
-                    <h3 class="mb-3">List of client bookings</h3>
+                <div class="bg-white rounded p-4" v-if="currentTab === 'bookings'">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>List of client bookings</h3>
+
+                        <div>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    {{ selectedFilter }}
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+                                    <button class="dropdown-item" type="button" @click="setFilter('All bookings')">
+                                        All bookings
+                                    </button>
+                                    <button class="dropdown-item" type="button" @click="setFilter('Future bookings only')">
+                                        Future bookings only
+                                    </button>
+                                    <button class="dropdown-item" type="button" @click="setFilter('Past bookings only')">
+                                        Past bookings only
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <template v-if="client.bookings && client.bookings.length > 0">
                         <table>
@@ -55,7 +78,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="booking in client.bookings" :key="booking.id">
+                                <tr v-for="booking in filteredBookings" :key="booking.id">
                                     <td>{{ formatDate(booking.start, booking.end) }}</td>
                                     <td>{{ booking.notes }}</td>
                                     <td>
@@ -74,7 +97,7 @@
                 </div>
 
                 <!-- Journals -->
-                <div class="bg-white rounded p-4" v-if="currentTab == 'journals'">
+                <div class="bg-white rounded p-4" v-if="currentTab === 'journals'">
                     <h3 class="mb-3">List of client journals</h3>
 
                     <p>(BONUS) TODO: implement this feature</p>
@@ -96,6 +119,21 @@ export default {
     data() {
         return {
             currentTab: 'bookings',
+            selectedFilter: 'All bookings',
+        }
+    },
+
+    computed: {
+        filteredBookings() {
+            const now = moment();
+
+            if (this.selectedFilter === 'Future bookings only') {
+                return this.client.bookings.filter(booking => moment(booking.start).isAfter(now));
+            } else if (this.selectedFilter === 'Past bookings only') {
+                return this.client.bookings.filter(booking => moment(booking.end).isBefore(now));
+            }
+
+            return this.client.bookings;
         }
     },
 
@@ -120,7 +158,11 @@ export default {
             const endTime = endDate.format(timeFormat);
 
             return `${formattedDate}, ${startTime} to ${endTime}`;
-        }
+        },
+
+        setFilter(filter) {
+            this.selectedFilter = filter;
+        },
     }
 }
 </script>
