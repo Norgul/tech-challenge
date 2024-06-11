@@ -31,8 +31,14 @@
 
             <div class="w-2/3">
                 <div>
-                    <button class="btn" :class="{'btn-primary': currentTab == 'bookings', 'btn-default': currentTab != 'bookings'}" @click="switchTab('bookings')">Bookings</button>
-                    <button class="btn" :class="{'btn-primary': currentTab == 'journals', 'btn-default': currentTab != 'journals'}" @click="switchTab('journals')">Journals</button>
+                    <button class="btn"
+                            :class="{'btn-primary': currentTab == 'bookings', 'btn-default': currentTab != 'bookings'}"
+                            @click="switchTab('bookings')">Bookings
+                    </button>
+                    <button class="btn"
+                            :class="{'btn-primary': currentTab == 'journals', 'btn-default': currentTab != 'journals'}"
+                            @click="switchTab('journals')">Journals
+                    </button>
                 </div>
 
                 <!-- Bookings -->
@@ -42,18 +48,19 @@
                     <template v-if="client.bookings && client.bookings.length > 0">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Notes</th>
-                                    <th>Actions</th>
-                                </tr>
+                            <tr>
+                                <th>Time</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="booking in client.bookings" :key="booking.id">
-                                    <td>{{ booking.start }} - {{ booking.end }}</td>
+                                    <td>{{ formatDate(booking.start, booking.end) }}</td>
                                     <td>{{ booking.notes }}</td>
                                     <td>
-                                        <button class="btn btn-danger btn-sm" @click="deleteBooking(booking)">Delete</button>
+                                        <button class="btn btn-danger btn-sm" @click="deleteBooking(booking)">Delete
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -79,6 +86,7 @@
 
 <script>
 import axios from 'axios';
+import moment from "moment";
 
 export default {
     name: 'ClientShow',
@@ -98,6 +106,20 @@ export default {
 
         deleteBooking(booking) {
             axios.delete(`/bookings/${booking.id}`);
+        },
+
+        formatDate(start, end) {
+            const startDate = moment(start);
+            const endDate = moment(end);
+
+            const dateFormat = 'dddd DD MMMM YYYY';
+            const timeFormat = 'HH:mm';
+
+            const formattedDate = startDate.format(dateFormat);
+            const startTime = startDate.format(timeFormat);
+            const endTime = endDate.format(timeFormat);
+
+            return `${formattedDate}, ${startTime} to ${endTime}`;
         }
     }
 }
