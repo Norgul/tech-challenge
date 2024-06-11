@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Client;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ClientsController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $clients = Client::all();
 
@@ -18,19 +19,19 @@ class ClientsController extends Controller
         return view('clients.index', ['clients' => $clients]);
     }
 
-    public function create()
+    public function create(): View
     {
         return view('clients.create');
     }
 
     public function show($client)
     {
-        $client = Client::where('id', $client)->first();
+        $client = Client::query()->with('bookings')->where('id', $client)->first();
 
         return view('clients.show', ['client' => $client]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): Client
     {
         $client = new Client;
         $client->name = $request->get('name');
@@ -44,9 +45,9 @@ class ClientsController extends Controller
         return $client;
     }
 
-    public function destroy($client)
+    public function destroy($client): string
     {
-        Client::where('id', $client)->delete();
+        Client::query()->where('id', $client)->delete();
 
         return 'Deleted';
     }
