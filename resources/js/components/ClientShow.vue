@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1 class="mb-6">Clients -> {{ client.name }}</h1>
+        <h1 class="mb-6">Clients -> {{ localClient.name }}</h1>
 
         <div class="flex">
             <div class="w-1/3 mr-5">
@@ -10,19 +10,19 @@
                         <tbody>
                             <tr>
                                 <th class="text-gray-600 pr-3">Name</th>
-                                <td>{{ client.name }}</td>
+                                <td>{{ localClient.name }}</td>
                             </tr>
                             <tr>
                                 <th class="text-gray-600 pr-3">Email</th>
-                                <td>{{ client.email }}</td>
+                                <td>{{ localClient.email }}</td>
                             </tr>
                             <tr>
                                 <th class="text-gray-600 pr-3">Phone</th>
-                                <td>{{ client.phone }}</td>
+                                <td>{{ localClient.phone }}</td>
                             </tr>
                             <tr>
                                 <th class="text-gray-600 pr-3">Address</th>
-                                <td>{{ client.address }}<br/>{{ client.postcode + ' ' + client.city }}</td>
+                                <td>{{ localClient.address }}<br/>{{ localClient.postcode + ' ' + localClient.city }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -47,28 +47,26 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h3>List of client bookings</h3>
 
-                        <div>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {{ selectedFilter }}
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {{ selectedFilter }}
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+                                <button class="dropdown-item" type="button" @click="setFilter('All bookings')">
+                                    All bookings
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-                                    <button class="dropdown-item" type="button" @click="setFilter('All bookings')">
-                                        All bookings
-                                    </button>
-                                    <button class="dropdown-item" type="button" @click="setFilter('Future bookings only')">
-                                        Future bookings only
-                                    </button>
-                                    <button class="dropdown-item" type="button" @click="setFilter('Past bookings only')">
-                                        Past bookings only
-                                    </button>
-                                </div>
+                                <button class="dropdown-item" type="button" @click="setFilter('Future bookings only')">
+                                    Future bookings only
+                                </button>
+                                <button class="dropdown-item" type="button" @click="setFilter('Past bookings only')">
+                                    Past bookings only
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <template v-if="client.bookings && client.bookings.length > 0">
+                    <template v-if="localClient.bookings && localClient.bookings.length > 0">
                         <table>
                             <thead>
                             <tr>
@@ -79,7 +77,7 @@
                             </thead>
                             <tbody>
                                 <tr v-for="booking in filteredBookings" :key="booking.id">
-                                    <td>{{ formatDate(booking.start, booking.end) }}</td>
+                                    <td>{{ formatBookingDate(booking.start, booking.end) }}</td>
                                     <td>{{ booking.notes }}</td>
                                     <td>
                                         <button class="btn btn-danger btn-sm" @click="deleteBooking(booking)">Delete
@@ -98,9 +96,42 @@
 
                 <!-- Journals -->
                 <div class="bg-white rounded p-4" v-if="currentTab === 'journals'">
-                    <h3 class="mb-3">List of client journals</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>List of client journals</h3>
+                        <a :href="`/clients/${this.localClient.id}/journals/create`" class="float-right btn btn-primary">+ New Journal</a>
+                    </div>
 
-                    <p>(BONUS) TODO: implement this feature</p>
+                    <template v-if="localClient.journals && localClient.journals.length > 0">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Content</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="journal in localClient.journals" :key="journal.id">
+                                    <td>{{ formatJournalDate(journal.date) }}</td>
+                                    <td>{{ journal.content }}</td>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" :href="`/clients/${localClient.id}/journals/${journal.id}`">
+                                            View
+                                        </a>
+
+                                        <button class="btn btn-danger btn-sm" @click="deleteJournal(journal)">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </template>
+
+                    <template v-else>
+                        <p class="text-center">The client has no bookings.</p>
+                    </template>
+
                 </div>
             </div>
         </div>
@@ -118,8 +149,19 @@ export default {
 
     data() {
         return {
+            localClient: this.client,
             currentTab: 'bookings',
             selectedFilter: 'All bookings',
+        }
+    },
+
+    watch: {
+        client: {
+            handler(newVal) {
+                this.localClient = newVal;
+            },
+            deep: true,
+            immediate: true
         }
     },
 
@@ -128,12 +170,12 @@ export default {
             const now = moment();
 
             if (this.selectedFilter === 'Future bookings only') {
-                return this.client.bookings.filter(booking => moment(booking.start).isAfter(now));
+                return this.localClient.bookings.filter(booking => moment(booking.start).isAfter(now));
             } else if (this.selectedFilter === 'Past bookings only') {
-                return this.client.bookings.filter(booking => moment(booking.end).isBefore(now));
+                return this.localClient.bookings.filter(booking => moment(booking.end).isBefore(now));
             }
 
-            return this.client.bookings;
+            return this.localClient.bookings;
         }
     },
 
@@ -146,7 +188,15 @@ export default {
             axios.delete(`/bookings/${booking.id}`);
         },
 
-        formatDate(start, end) {
+        deleteJournal(journal) {
+            axios
+                .delete(`${this.localClient.id}/journals/${journal.id}`)
+                .then(() => {
+                    this.localClient.journals = this.localClient.journals.filter(j => j.id !== journal.id);
+                })
+        },
+
+        formatBookingDate(start, end) {
             const startDate = moment(start);
             const endDate = moment(end);
 
@@ -158,6 +208,10 @@ export default {
             const endTime = endDate.format(timeFormat);
 
             return `${formattedDate}, ${startTime} to ${endTime}`;
+        },
+
+        formatJournalDate(date) {
+            return moment(date).format('dddd DD MMMM YYYY');
         },
 
         setFilter(filter) {

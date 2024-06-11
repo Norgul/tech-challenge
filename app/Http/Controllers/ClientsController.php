@@ -13,7 +13,7 @@ class ClientsController extends Controller
         $clients = auth()->user()->clients;
 
         foreach ($clients as $client) {
-            $client->append('bookings_count');
+            $client->append(['bookings_count', 'journals_count']);
         }
 
         return view('clients.index', ['clients' => $clients]);
@@ -24,11 +24,9 @@ class ClientsController extends Controller
         return view('clients.create');
     }
 
-    public function show($client)
+    public function show(Client $client): View
     {
-        $client = Client::query()->with('bookings')->where('id', $client)->first();
-
-        return view('clients.show', ['client' => $client]);
+        return view('clients.show', ['client' => $client->load(['bookings', 'journals'])]);
     }
 
     public function store(ClientRequest $request): Client
@@ -36,9 +34,9 @@ class ClientsController extends Controller
         return auth()->user()->clients()->create($request->validated());
     }
 
-    public function destroy($client): string
+    public function destroy(Client $client): string
     {
-        Client::query()->where('id', $client)->delete();
+        $client->delete();
 
         return 'Deleted';
     }

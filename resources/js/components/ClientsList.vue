@@ -7,20 +7,22 @@
 
         <table class="table">
             <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Number of Bookings</th>
-                    <th>Actions</th>
-                </tr>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Number of Bookings</th>
+                <th>Number of Journals</th>
+                <th>Actions</th>
+            </tr>
             </thead>
             <tbody>
-                <tr v-for="client in clients" :key="client.id">
+                <tr v-for="client in localClients" :key="client.id">
                     <td>{{ client.name }}</td>
                     <td>{{ client.email }}</td>
                     <td>{{ client.phone }}</td>
                     <td>{{ client.bookings_count }}</td>
+                    <td>{{ client.journals_count }}</td>
                     <td>
                         <a class="btn btn-primary btn-sm" :href="`/clients/${client.id}`">View</a>
                         <button class="btn btn-danger btn-sm" @click="deleteClient(client)">Delete</button>
@@ -39,11 +41,18 @@ export default {
 
     props: ['clients'],
 
+    data() {
+        return {
+            localClients: this.clients,
+        }
+    },
+
     methods: {
         deleteClient(client) {
-            axios.delete(`/clients/${client.id}`)
+            axios
+                .delete(`/clients/${client.id}`)
                 .then(() => {
-                    this.clients = this.clients.filter(c => c.id !== client.id);
+                    this.localClients = this.localClients.filter(c => c.id !== client.id);
                 })
         }
     }
