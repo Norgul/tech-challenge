@@ -23,7 +23,9 @@ class Client extends Model
 
     public function bookings(): HasMany
     {
-        return $this->hasMany(Booking::class);
+        return $this->hasMany(Booking::class)
+            // Assuming "chronological order, newest first" means lastly created, not ordering by start/end times.
+            ->latest();
     }
 
     public function user(): BelongsTo
