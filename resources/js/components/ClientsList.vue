@@ -41,7 +41,10 @@ export default {
 
     methods: {
         deleteClient(client) {
-            axios.delete(`/clients/${client.id}`);
+            axios.delete(`/clients/${client.id}`)
+                .then(() => {
+                    this.clients = this.clients.filter(c => c.id !== client.id);
+                })
         }
     }
 }
